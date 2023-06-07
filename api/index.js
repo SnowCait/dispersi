@@ -7,6 +7,29 @@ export const handler = async (e) => {
 
   const requestEvent = JSON.parse(json)
 
+  const nsec = await getNsec('nostr-test-bot-nsec')
+  const { type, data: seckey } = nip19.decode(nsec)
+
+  if (type !== 'nsec' || typeof seckey !== 'string') {
+    throw new Error(`[invalid nsec] type: ${type}, typeof seckey: ${typeof seckey}`)
+  }
+
+  let event
+  if (isRootEvent(requestEvent)) {
+    event = startGame(seckey, requestEvent)
+  } else {
+    throw new Error('Not implemented')
+  }
+
+  console.log('[event]', event)
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(event)
+  }
+}
+
+function startGame (seckey, requestEvent) {
   const content = '' +
     '🟩🟩🟩🟩🟩🟩🟩🟩 1\n' +
     '🟩🟩🟩🟩🟩🟩🟩🟩 2\n' +
@@ -17,13 +40,6 @@ export const handler = async (e) => {
     '🟩🟩🟩🟩🟩🟩🟩🟩 7\n' +
     '🟩🟩🟩🟩🟩🟩🟩🟩 8\n' +
     ' ａ ｂ ｃ ｄ ｅ ｆ ｇ ｈ'
-
-  const nsec = await getNsec('nostr-test-bot-nsec')
-  const { type, data: seckey } = nip19.decode(nsec)
-
-  if (type !== 'nsec' || typeof seckey !== 'string') {
-    throw new Error(`[invalid nsec] type: ${type}, typeof seckey: ${typeof seckey}`)
-  }
 
   const event = {
     kind: 1,
@@ -39,12 +55,11 @@ export const handler = async (e) => {
   event.id = getEventHash(event)
   event.sig = getSignature(event, seckey)
 
-  console.log('[event]', event)
+  return event
+}
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify(event)
-  }
+function isRootEvent (event) {
+  return !event.tags.some(([tagName]) => tagName === 'e')
 }
 
 async function getNsec (name) {
