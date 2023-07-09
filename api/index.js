@@ -9,7 +9,7 @@ const relays = [
   'wss://nostr-relay.nokotaro.com',
   'wss://nostream.ocha.one'
 ]
-const regexp = /(?<x>[a-h])(?<y>[1-8])/
+const regexp = /\b(?<x>[a-h])(?<y>[1-8])\b/
 const boardSize = 8
 
 export const handler = async (e) => {
